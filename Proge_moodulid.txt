@@ -1,0 +1,21 @@
+*Töökeskkond, moodulid ja struktuur
+
+Kirjutamiseks PyCharm, kuna eelistan seda üle VSCode-i ja Thonnys on raskem/aeglasem kirjutada minu jaoks, eriti kuna vaja .
+
+PySimpleGUI - GUI, tabelite loomine, Tkinter ei ole lemmik, tundub paljutõotav
+SQLAlchemy - Andmebaas, olen sellega juba tuttav
+Beatiful Soup - Veebiinfo saamine kogumispensioni kohta: https://www.pensionikeskus.ee/raamatupidajale/ii-sammas/liitumiskontroll/?personCode=xxxxxxxxxx
+DateTime - Arvutuste juures on vajalik aja järgi valida sobivad parameetrid
+
+Matemaatika mooduleid nagu NumPy pole vaja, kuna arvutused ise on väikese mahuga, arvutused teeb keerukaks mõjutavate tingimuste kogus.
+
+Kasutajaliidese osad:
+	Arvutuste ja andmete leht
+	Seaded (maksumäärad ja muu)
+	Isikute andmete salvestus ja näitamine
+	Võimalusel ka terve firma majandamine
+
+Taust:
+	Arvutuste funktsioonid
+	Andmebaas maksude ja isikute jaoks
+	Kasutajaliidese loomine
