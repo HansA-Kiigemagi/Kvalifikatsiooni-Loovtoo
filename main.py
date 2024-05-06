@@ -1,65 +1,70 @@
 import PySimpleGUI as sg
+sg.theme("Default 1")
 
-# Tulumaksu arvutamise funktsioon
-def tulumaks1(arvestuslik_palk, kogumispension):
-    if arvestuslik_palk <= 1200:
-        # Kas isikul on II sammas või mitte
-        if kogumispension == True:
-            tulumaks = (arvestuslik_palk - (0.016 * arvestuslik_palk + 0.02 * arvestuslik_palk + 654)) * 0.2
-        else:
-            tulumaks = (arvestuslik_palk - (0.016 * arvestuslik_palk + 654)) * 0.2
-        # Vaatab et tulumaks poleks negatiivne
-        if tulumaks < 0:
-            tulumaks = 0
-    elif arvestuslik_palk < 2100:
-        tulumaks = (arvestuslik_palk - (654 - (arvestuslik_palk - 1200) * 0.72667)) * 0.2
-        print(tulumaks)
+# Maksude arvutamise funktsioon(id)
+def maksud2024(arvestuslik,kas_kogumis):
+    # Lihtsad maksud
+    # Kogumispension on valikuline
+    if kas_kogumis:
+        kogumispension = round(arvestuslik * 0.02, 2)
     else:
-        tulumaks = arvestuslik_palk * 0.2
-    # Peab olema ümardatud 1 sendini
-    return round(tulumaks, 2)
+        kogumispension = 0
+    tootuskindlustus = round(arvestuslik * 0.016, 2)
+    # Tulumaksuvaba
+    if arvestuslik <= 1200:
+        tmvaba = 654
+    elif arvestuslik < 2100:
+        tmvaba = round(654 - 0.72667 * (arvestuslik - 1200))
+    else:
+        tmvaba = 0
+    # Tulumaks
+    tulumaks = round((arvestuslik - tmvaba - kogumispension - tootuskindlustus) * 0.2, 2)
+    # Kätte
+    netopalk = round(arvestuslik - kogumispension - tootuskindlustus - tulumaks, 2)
 
-# Akna kujundus
+    return kogumispension, tootuskindlustus, tmvaba, tulumaks, netopalk
+
+
+# Akna kujunduse veerud
+maksude_nimetuste_veerg = [[sg.Text("Kogumispension:")],
+                           [sg.Text("Töötuskindlustus:")],
+                           [sg.Text("Tulumaksuvaba:")],
+                           [sg.Text("Tulumaks:")],
+                           [sg.Text("Netopalk:")]]
+
+maksude_arvude_veerg = [[sg.Text(key="-KOGUMISPENSION-")],
+                        [sg.Text(key="-TOOTUS_TOOTAJALT-")],
+                        [sg.Text(key="-TMVABA-")],
+                        [sg.Text(key="-TULUMAKS-")],
+                        [sg.Text(key="-NETOPALK-")]]
+
+# Kogu kujundus
 
 layout = [[sg.Text("Sisesta arvestuslik töötasu:"), sg.Input(key="-ARVESTUSLIK-",)],
           [sg.Text("Kogumispension"), sg.Radio("On",key="ON", group_id=1), sg.Radio("Ei ole",key="POLE", group_id=1)],
-          [sg.Text("Tulumaks"), sg.Text(key="-TULUMAKS-")],
-          [sg.Text("Töötuskindlustus"), sg.Text(key="-TOOTUS_TOOTAJALT-")],
-          [sg.Text("Kogumispension"), sg.Text(key="-KOGUMISPENSION-")],
-          [sg.Text("Netopalk"), sg.Text(key="-NETOPALK-")],
-          [sg.Button("Arvuta")],
+          [sg.Column(maksude_nimetuste_veerg), sg.Column(maksude_arvude_veerg)],
+          [sg.Button("Arvuta", bind_return_key=True)],
           [sg.Button("Sulge")]]
 
-window = sg.Window("Tulumaksu kalkulaator v0.0.1", layout)
+
+window = sg.Window("Tulumaksu kalkulaator v0.0.3", layout)
 
 # Tegevustsükkel
-
 while True:
     event, values = window.read()
     print(event, values)
     if event == sg.WIN_CLOSED or event == "Sulge":
         break
     if event == "Arvuta":
-        # Tulumaks andmete põhjal
+        # Maksude arvutamine andmete põhjal
         arvestuslik_sisend = float(values["-ARVESTUSLIK-"])
         if values["ON"] == True:
-            tulemus = tulumaks1(arvestuslik_sisend, True)
+            kogumispension, tootuskindlustus, tmvaba, tulumaks, netopalk = maksud2024(arvestuslik_sisend, True)
         else:
-            tulemus = tulumaks1(arvestuslik_sisend, False)
-        tulemus_tekst = str(tulemus) + "€"
-        window["-TULUMAKS-"].update(tulemus_tekst)
-        # Töötuskindlustus
-        tootuskindlustus = round(arvestuslik_sisend * 0.016, 2)
-        tootus_valja = str(tootuskindlustus) + "€"
-        window["-TOOTUS_TOOTAJALT-"].update(tootus_valja)
-        # Kogumispension
-        if values["ON"] == True:
-            kogumispension = round(arvestuslik_sisend * 0.02, 2)
-        else:
-            kogumispension = 0
-        kogumispension_valja = str(kogumispension) + "€"
-        window["-KOGUMISPENSION-"].update(kogumispension_valja)
-        # Netopalk
-        netopalk = arvestuslik_sisend - tulemus - tootuskindlustus - kogumispension
-        netopalk_valja = str(netopalk)
-        window["-NETOPALK-"].update(netopalk_valja)
+            kogumispension, tootuskindlustus, tmvaba, tulumaks, netopalk = maksud2024(arvestuslik_sisend, False)
+        # Andmete kuvamine programmiaknas
+        window["-KOGUMISPENSION-"].update(str(kogumispension) + "€")
+        window["-TOOTUS_TOOTAJALT-"].update(str(tootuskindlustus) + "€")
+        window["-TMVABA-"].update(str(tmvaba) + "€")
+        window["-TULUMAKS-"].update(str(tulumaks) + "€")
+        window["-NETOPALK-"].update(str(netopalk) + "€")
