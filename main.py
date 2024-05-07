@@ -38,13 +38,15 @@ maksude_arvude_veerg = [[sg.Text(key="-KOGUMISPENSION-", size=(10,1))],
                         [sg.Text(key="-TULUMAKS-", size=(10,1))],
                         [sg.Text(key="-NETOPALK-", size=(10,1))]]
 
-andmete_nimetuste_veerg = [[sg.Text("Isikukood")],
-                           [sg.Text("Eesnimi")],
-                           [sg.Text("Perenimi")]]
+andmete_nimetuste_veerg = [[sg.Text("Isikukood:")],
+                           [sg.Text("Eesnimi:")],
+                           [sg.Text("Perenimi:")],
+                           [sg.Text("Kuupäev:")]]
 
 andmete_sisestuse_veerg = [[sg.Input(key="-ISIKUKOOD-")],
                            [sg.Input(key="-EESNIMI-")],
-                           [sg.Input(key="-PERENIMI-")]]
+                           [sg.Input(key="-PERENIMI-")],
+                           [sg.Input(key="-KUUPAEV-")]]
 # Kogu kujundus
 
 layout = [[sg.Text("Sisesta arvestuslik töötasu:"), sg.Input(key="-ARVESTUSLIK-",)],
