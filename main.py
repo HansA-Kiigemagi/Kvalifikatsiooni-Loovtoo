@@ -32,22 +32,31 @@ maksude_nimetuste_veerg = [[sg.Text("Kogumispension:")],
                            [sg.Text("Tulumaks:")],
                            [sg.Text("Netopalk:")]]
 
-maksude_arvude_veerg = [[sg.Text(key="-KOGUMISPENSION-")],
-                        [sg.Text(key="-TOOTUS_TOOTAJALT-")],
-                        [sg.Text(key="-TMVABA-")],
-                        [sg.Text(key="-TULUMAKS-")],
-                        [sg.Text(key="-NETOPALK-")]]
+maksude_arvude_veerg = [[sg.Text(key="-KOGUMISPENSION-", size=(10,1))],
+                        [sg.Text(key="-TOOTUS_TOOTAJALT-", size=(10,1))],
+                        [sg.Text(key="-TMVABA-", size=(10,1))],
+                        [sg.Text(key="-TULUMAKS-", size=(10,1))],
+                        [sg.Text(key="-NETOPALK-", size=(10,1))]]
 
+andmete_nimetuste_veerg = [[sg.Text("Isikukood:")],
+                           [sg.Text("Eesnimi:")],
+                           [sg.Text("Perenimi:")],
+                           [sg.Text("Kuupäev:")]]
+
+andmete_sisestuse_veerg = [[sg.Input(key="-ISIKUKOOD-")],
+                           [sg.Input(key="-EESNIMI-")],
+                           [sg.Input(key="-PERENIMI-")],
+                           [sg.Input(key="-KUUPAEV-")]]
 # Kogu kujundus
 
 layout = [[sg.Text("Sisesta arvestuslik töötasu:"), sg.Input(key="-ARVESTUSLIK-",)],
           [sg.Text("Kogumispension"), sg.Radio("On",key="ON", group_id=1), sg.Radio("Ei ole",key="POLE", group_id=1)],
-          [sg.Column(maksude_nimetuste_veerg), sg.Column(maksude_arvude_veerg)],
+          [sg.Column(maksude_nimetuste_veerg), sg.Column(maksude_arvude_veerg), sg.VSeparator(), sg.Column(andmete_nimetuste_veerg), sg.Column(andmete_sisestuse_veerg)],
           [sg.Button("Arvuta", bind_return_key=True)],
           [sg.Button("Sulge")]]
 
 
-window = sg.Window("Tulumaksu kalkulaator v0.0.3", layout)
+window = sg.Window("Tulumaksu kalkulaator v0.0.3", layout, size=(1200, 400))
 
 # Tegevustsükkel
 while True:
