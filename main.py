@@ -6,15 +6,16 @@ from reportlab.lib.units import cm
 # Maksude arvutamise funktsioon(id)
 def maksud2024(arvestuslik,kas_kogumis):
     # Lihtsad maksud
-    # Kogumispension on valikuline
+    # Kogumispension on valikuline 2%
     if kas_kogumis:
         kogumispension = round(arvestuslik * 0.02, 2)
     else:
         kogumispension = 0
+    # Töötuskindlustus 1,6%
     tootuskindlustus = round(arvestuslik * 0.016, 2)
-    # Tulumaksuvaba
+    # Tulumaksuvaba maksimaalselt 654€, sõltub tulust
     if arvestuslik <= 1200:
-        if arvestuslik < 654:
+        if arvestuslik - kogumispension - tootuskindlustus < 654:
             tmvaba = arvestuslik - kogumispension - tootuskindlustus
         else:
             tmvaba = 654
@@ -22,11 +23,31 @@ def maksud2024(arvestuslik,kas_kogumis):
         tmvaba = round(654 - 0.72667 * (arvestuslik - 1200))
     else:
         tmvaba = 0
-    # Tulumaks
+    # Tulumaks 20%
     tulumaks = round((arvestuslik - tmvaba - kogumispension - tootuskindlustus) * 0.2, 2)
     if tulumaks < 0:
         tulumaks = 0
     # Kätte
+    netopalk = round(arvestuslik - kogumispension - tootuskindlustus - tulumaks, 2)
+
+    return kogumispension, tootuskindlustus, tmvaba, tulumaks, netopalk
+
+def maksud2025(arvestuslik, kas_kogumis):
+    # Valikuline kogumispension 2%
+    if kas_kogumis:
+        kogumispension = round(arvestuslik * 0.02, 2)
+    else:
+        kogumispension = 0
+    # Tootuskindlustus 1,6%
+    tootuskindlustus = tootuskindlustus = round(arvestuslik * 0.016, 2)
+    # Tulumaksuvaba kõigil 700€
+    if arvestuslik - kogumispension - tootuskindlustus < 700:
+        tmvaba = arvestuslik - kogumispension - tootuskindlustus
+    else:
+        tmvaba = 700
+    # Tulumaks 22%
+    tulumaks = round((arvestuslik - tmvaba - kogumispension - tootuskindlustus) * 0.22, 2)
+    # Netopalk
     netopalk = round(arvestuslik - kogumispension - tootuskindlustus - tulumaks, 2)
 
     return kogumispension, tootuskindlustus, tmvaba, tulumaks, netopalk
@@ -60,9 +81,10 @@ andmete_sisestuse_veerg = [[sg.Input(key="-ISIKUKOOD-", size=(12,1))],
 # Kogu kujundus
 
 layout = [[sg.Text("Sisesta arvestuslik töötasu:"), sg.Input(key="-ARVESTUSLIK-", size=(12,1))],
-          [sg.Text("Kogumispension"), sg.Radio("On",key="ON", group_id=1), sg.Radio("Ei ole",key="POLE", group_id=1)],
+          [sg.Text("Maksuseaduse aasta"), sg.Combo(["2024", "2025"], readonly=True, default_value="2024", key="-AASTA-")],
+          [sg.Text("Kogumispension"), sg.Radio("On",key="ON", group_id=1,), sg.Radio("Ei ole",key="POLE", group_id=1)],
           [sg.Column(maksude_nimetuste_veerg), sg.Column(maksude_arvude_veerg), sg.VSeparator(), sg.Column(andmete_nimetuste_veerg), sg.Column(andmete_sisestuse_veerg)],
-          [sg.Button("Arvuta", bind_return_key=True), sg.Button("Loo PDF")],
+          [sg.Button("Arvuta", bind_return_key=True), sg.Button("Loo PDF", disabled=True, key="-PDFNUPP-")],
           [sg.Button("Sulge")]]
 
 
@@ -75,19 +97,20 @@ while True:
     if event == sg.WIN_CLOSED or event == "Sulge":
         break
     if event == "Arvuta":
-        # Maksude arvutamine andmete põhjal
+        # Maksude arvutamine andmete põhjal, sõltuvalt valitud aastast
         arvestuslik_sisend = float(values["-ARVESTUSLIK-"])
-        if values["ON"] == True:
-            kogumispension, tootuskindlustus, tmvaba, tulumaks, netopalk = maksud2024(arvestuslik_sisend, True)
-        else:
-            kogumispension, tootuskindlustus, tmvaba, tulumaks, netopalk = maksud2024(arvestuslik_sisend, False)
+        if values["-AASTA-"] == "2024":
+            kogumispension, tootuskindlustus, tmvaba, tulumaks, netopalk = maksud2024(arvestuslik_sisend, values["ON"])
+        elif values["-AASTA-"] == "2025":
+            kogumispension, tootuskindlustus, tmvaba, tulumaks, netopalk = maksud2025(arvestuslik_sisend, values["ON"])
         # Andmete kuvamine programmiaknas
         window["-KOGUMISPENSION-"].update(str(kogumispension) + "€")
         window["-TOOTUS_TOOTAJALT-"].update(str(tootuskindlustus) + "€")
         window["-TMVABA-"].update(str(tmvaba) + "€")
         window["-TULUMAKS-"].update(str(tulumaks) + "€")
         window["-NETOPALK-"].update(str(netopalk) + "€")
-    if event == "Loo PDF":
+        window["-PDFNUPP-"].update(disabled=False)
+    if event == "-PDFNUPP-":
         # Sisenditest andmete võtmine
         isikukood = str(values["-ISIKUKOOD-"])
         perenimi = str(values["-PERENIMI-"])
@@ -102,23 +125,32 @@ while True:
         canvas.setFont("Helvetica", 20)
         canvas.drawString(2 * cm, 27.5 * cm, "Palgaleht")
         canvas.line(2 * cm, 27 * cm, 20 * cm, 27 * cm)
+
         # Sisu
         canvas.setFont("Helvetica", 12)
-        canvas.drawString(2 * cm, 26 * cm, "Töötaja")
-        canvas.drawString(5 * cm, 26 * cm, eesnimi + " " + perenimi)
-        canvas.drawString(2 * cm, 25 * cm, "Isikukood")
-        canvas.drawString(5 * cm, 25 * cm, isikukood)
-        canvas.drawString(11 * cm, 26 * cm, "Bruto Töötasu")
-        canvas.drawString(15 * cm, 26 * cm, str(arvestuslik_sisend) + "€")
-        canvas.drawString(11 * cm, 25 * cm, "Kogumispension")
-        canvas.drawString(15 * cm, 25 * cm, str(kogumispension) + "€")
-        canvas.drawString(11 * cm, 24 * cm, "Töötuskindlustus")
-        canvas.drawString(15 * cm, 24 * cm, str(tootuskindlustus) + "€")
-        canvas.drawString(11 * cm, 23 * cm, "Tulumaksuvaba")
-        canvas.drawString(15 * cm, 23 * cm, str(tmvaba) + "€")
-        canvas.drawString(11 * cm, 22 * cm, "Tulumaks")
-        canvas.drawString(15 * cm, 22 * cm, str(tulumaks) + "€")
-        canvas.drawString(11 * cm, 21 * cm, "Neto töötasu")
-        canvas.drawString(15 * cm, 21 * cm, str(netopalk) + "€")
+        # Vasakpoolne plokk - töötaja ja palgalehe info
+        x1 = 2 * cm
+        y = 26 * cm
+        taisnimi = eesnimi + " " + perenimi
+        vasak_nimed = ["Töötaja", "Isikukood", "Kuupäev", "Maksmise kuupäev"]
+        vasak_andmed = [taisnimi, isikukood, kuupaev, maksmise_kuupaev]
 
+        for i in range(len(vasak_nimed)):
+            canvas.drawString(x1, y, str(vasak_nimed[i]))
+            canvas.drawString(x1 + 4 * cm, y, str(vasak_andmed[i]))
+            y -= 1 * cm
+
+        # Parem plokk - töötaja palgaandmed
+        x2 = 11 * cm
+        y = 26 * cm
+        parem_nimed = ["Bruto Töötasu", "Kogumispension", "Töötuskindlustus", "Tulumaksuvaba", "Tulumaks", "Neto töötasu"]
+        parem_andmed = [arvestuslik_sisend, kogumispension, tootuskindlustus, tmvaba, tulumaks, netopalk]
+
+        for i in range(len(parem_nimed)):
+            canvas.drawString(x2, y, parem_nimed[i])
+            canvas.drawString(x2 + 4 * cm, y, str(parem_andmed[i]) + "€")
+            y -= 1 * cm
+
+        # Faili salvestamine
+        canvas.showPage()
         canvas.save()
